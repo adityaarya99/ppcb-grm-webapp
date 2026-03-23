@@ -1,0 +1,98 @@
+/**
+ * Tailwind CSS Base Styles
+ * Custom base styles and utilities
+ */
+
+@import "tailwindcss";
+
+/* Custom CSS Variables for theming - Tailwind v4 compatible */
+:root {
+    /* Colors - Primary */
+    --color-primary: #036b6b;
+    --color-primary-dark: #024d4d;
+    --color-primary-light: #0a8a8a;
+
+    /* Colors - Accent */
+    --color-accent: #e8820c;
+    --color-accent-light: #f9a940;
+
+    /* Colors - Semantic */
+    --color-success: #0d7a55;
+    --color-danger: #c0392b;
+    --color-warning: #d4920a;
+
+    /* Shadows */
+    --shadow-card: 0 4px 20px rgba(10, 79, 143, 0.12);
+    --shadow-elevated: 0 8px 40px rgba(10, 79, 143, 0.18);
+
+    /* Animation durations */
+    --animate-duration-fast: 150ms;
+    --animate-duration-normal: 300ms;
+    --animate-duration-slow: 500ms;
+}
+
+/* Custom animations */
+@keyframes modal-enter {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animation utility classes */
+@layer utilities {
+    .animate-modal-enter {
+        animation: modal-enter 0.2s ease-out;
+    }
+
+    .animate-fade-in {
+        animation: fade-in 0.3s ease-out;
+    }
+
+    .animate-slide-up {
+        animation: slide-up 0.3s ease-out;
+    }
+
+    .animate-slide-down {
+        animation: slide-down 0.3s ease-out;
+    }
+}
