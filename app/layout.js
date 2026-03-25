@@ -1,4 +1,6 @@
+
 import "./globals.css";
+import ReduxProvider from '@/lib/ReduxProvider';
 
 export const metadata = {
   title: "PPCB GRM Portal – Home",
@@ -26,7 +28,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        {children}
+        <ReduxProvider>{children}</ReduxProvider>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
       </body>
     </html>
