@@ -1,28 +1,46 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useDispatch, useSelector } from 'react-redux';
 import { submitGrievance, resetSubmissionState } from '@/features/grievances/slice';
+import Swal from 'sweetalert2';
+import { getDistricts, getGroupTypes } from '@/services/api';
 
-/**
- * Citizen Grievance Form Page - Multi-step form for submitting complaints
- */
 
 export default function CitizenGrievanceFormPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [complaintType, setComplaintType] = useState("individual");
   const [files, setFiles] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [groupTypes, setGroupTypes] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
   const fileInputRef = useRef(null);
 
-  // Redux
   const dispatch = useDispatch();
   const { loading, error, success, referenceNumber } = useSelector((state) => state.grievance);
 
-  // Form data state
+  // Fetch districts and group types on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [districtsData, groupTypesData] = await Promise.all([
+          getDistricts(),
+          getGroupTypes(),
+        ]);
+        setDistricts(districtsData || []);
+        setGroupTypes(groupTypesData || []);
+      } catch (err) {
+        console.error('Error fetching form data:', err);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const [formData, setFormData] = useState({
-    // Individual complainant
     cpName: "",
     cpMobile: "",
     cpDistrict: "",
@@ -99,50 +117,99 @@ export default function CitizenGrievanceFormPage() {
   // Submit complaint (dispatches Redux thunk)
   const handleSubmitComplaint = async () => {
     if (!declarationChecked) {
-      alert("Please check the declaration checkbox to proceed.");
+      alert("Please check declaration");
       return;
     }
 
-    // Build FormData according to backend expectations (matches provided curl)
     const form = new FormData();
 
-    // Attach files (up to whatever user selected)
+    // ✅ FILES (Correct already)
     if (files && files.length > 0) {
       files.forEach((f) => form.append('file', f));
     }
 
-    // Basic mapping of frontend fields to backend form keys
-    // `form_type` - default to 'public'
-    form.append('form_type', 'public');
+    // ✅ REQUIRED FIELDS
+    form.append('form_type', 'CITIZEN');
 
-    // pollution_types can be multiple; map category (e.g. 'Air Pollution' -> 'Air')
+    // ✅ pollution_types MUST BE ARRAY
     if (formData.cCategory) {
       const simple = String(formData.cCategory).split(' ')[0];
       form.append('pollution_types', simple);
+      // backend Transform will convert to array
     }
 
     form.append('complaint_subject', formData.cSubject || '');
-    form.append('site_address', formData.pollutionLocation || '');
+    form.append('complaint_details', formData.cDesc || ''); // ✅ FIXED
 
-    // site_district_id: backend may expect an id; fall back to district name if id not available
+    form.append('site_address', formData.pollutionLocation || '');
     form.append('site_district_id', formData.cpDistrict || '');
     form.append('site_pincode', formData.cpPinCode || '');
 
-    // filed_by_type: Individual or Group
-    form.append('filed_by_type', complaintType === 'individual' ? 'Individual' : 'Group');
+    form.append(
+      'filed_by_type',
+      complaintType === 'individual' ? 'Individual' : 'Group'
+    );
 
-    // Additional fields for context
-    form.append('description', formData.cDesc || '');
+    // ✅ FIX FIELD NAMES
+    form.append(
+      'complainant_name',
+      complaintType === 'individual'
+        ? formData.cpName
+        : formData.cpNodalName
+    );
+
+    form.append(
+      'complainant_contact_no', // ✅ FIXED NAME
+      complaintType === 'individual'
+        ? formData.cpMobile
+        : formData.cpNodalContact
+    );
+
+    // OPTIONAL
     form.append('industry_name', formData.industryName || '');
-    form.append('complainant_name', complaintType === 'individual' ? formData.cpName || '' : formData.cpNodalName || '');
-    form.append('complainant_contact', complaintType === 'individual' ? formData.cpMobile || '' : formData.cpNodalContact || '');
 
     dispatch(submitGrievance(form));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
+  const handleStep1Next = () => {
+    if (validateStep1()) {
+      goToStep(2);
+    }
+  };
   const progressPercentages = { 1: "33.33%", 2: "66.66%", 3: "100%" };
+  const validateStep1 = () => {
+    let errors = [];
 
+    if (complaintType === "individual") {
+      if (!formData.cpName) errors.push("Complainant Name is required");
+      if (!formData.cpMobile) errors.push("Mobile number is required");
+      if (!/^[0-9]{10}$/.test(formData.cpMobile)) errors.push("Invalid mobile number");
+      if (!formData.cpDistrict) errors.push("District is required");
+      if (!formData.cpAddress) errors.push("Address is required");
+    }
+
+    if (complaintType === "group") {
+      if (!formData.cpGroupType) errors.push("Group Type is required");
+      if (!formData.cpNodalName) errors.push("Nodal Officer Name is required");
+      if (!formData.cpNodalContact) errors.push("Nodal Contact is required");
+      if (!formData.cpGroupAddress) errors.push("Group Address is required");
+    }
+
+    if (!formData.cCategory) errors.push("Pollution Type is required");
+    if (!formData.pollutionLocation) errors.push("Pollution Location is required");
+    if (!formData.cSubject) errors.push("Complaint Subject is required");
+    if (!formData.cDesc) errors.push("Description is required");
+
+    if (errors.length > 0) {
+      Swal.fire({
+        title: 'Validation Errors',
+        html: errors.join('<br>'),
+        icon: 'error'
+      });
+      return false;
+    }
+
+    return true;
+  };
   // Show success state if Redux says so
   const successState = success;
   const generatedNum = referenceNumber || '';
@@ -488,20 +555,14 @@ export default function CitizenGrievanceFormPage() {
                             id="cpDistrict"
                             value={formData.cpDistrict}
                             onChange={handleInputChange}
+                            disabled={loadingData}
                           >
                             <option value="">-- Select District --</option>
-                            <option>Amritsar</option>
-                            <option>Ludhiana</option>
-                            <option>Jalandhar</option>
-                            <option>Patiala</option>
-                            <option>Bathinda</option>
-                            <option>Mohali (SAS Nagar)</option>
-                            <option>Gurdaspur</option>
-                            <option>Hoshiarpur</option>
-                            <option>Moga</option>
-                            <option>Firozpur</option>
-                            <option>Faridkot</option>
-                            <option>Sangrur</option>
+                            {districts.map((district) => (
+                              <option key={district.id} value={district.id}>
+                                {district.name}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         <div className="col-md-6">
@@ -558,13 +619,14 @@ export default function CitizenGrievanceFormPage() {
                             id="cpGroupType"
                             value={formData.cpGroupType}
                             onChange={handleInputChange}
+                            disabled={loadingData}
                           >
                             <option value="">-- Select Group Type --</option>
-                            <option>Residents Welfare Association (RWA)</option>
-                            <option>Society</option>
-                            <option>Association</option>
-                            <option>Civil Society Organization (CSO)</option>
-                            <option>Other (Group of Individuals)</option>
+                            {groupTypes.map((groupType) => (
+                              <option key={groupType.id} value={groupType.name}>
+                                {groupType.name}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         <div className="col-md-6">
@@ -888,7 +950,7 @@ export default function CitizenGrievanceFormPage() {
                     }}
                   >
                     <button
-                      onClick={() => goToStep(2)}
+                      onClick={handleStep1Next}
                       className="btn-p"
                       style={{ padding: "10px 26px", fontSize: "0.85rem" }}
                     >

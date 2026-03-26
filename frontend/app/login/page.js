@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { loginApi } from "@/services/api"; // ADD THIS
+
 import { useRouter } from "next/navigation";
 import { login } from "@/features/auth";
 import Image from "next/image";
@@ -48,10 +50,23 @@ export default function LoginPage() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+
     const username = formData.empId.trim();
     const password = formData.password.trim();
+
     if (!username || !password) return;
-    dispatch(login({ username, password }));
+
+    try {
+      const res = await loginApi({ username, password });
+
+      console.log("LOGIN SUCCESS:", res);
+
+      router.replace("/dashboard");
+
+    } catch (err) {
+      console.error("LOGIN ERROR:", err.message);
+      alert(err.message);
+    }
   };
 
   useEffect(() => {
@@ -581,7 +596,7 @@ export default function LoginPage() {
                   <div className="pw-wrap">
                     <input
                       type={showPassword ? "text" : "password"}
-                      id="pwField"
+                      id="password"
                       className="f-control"
                       placeholder="Enter password"
                       value={formData.password}

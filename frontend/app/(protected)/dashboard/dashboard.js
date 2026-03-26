@@ -3,21 +3,37 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
+import { getGrievances } from "@/services/api";
 import "./style.css";
 
 export default function Dashboard() {
   /* ================= ACCORDION STATE ================= */
   const [activeAccordion, setActiveAccordion] = useState(null);
-
+  const [grievances, setGrievances] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const handleAccordionToggle = (index) => {
     setActiveAccordion((prev) => (prev === index ? null : index));
   };
+  useEffect(() => {
+    const fetchGrievances = async () => {
+      try {
+        setLoading(true);
+        const data = await getGrievances();
+        setGrievances(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchGrievances();
+  }, []);
   return (
     <main className="main-content">
-      {/* DASHBOARD */}
       <div id="dashboard" className="page-section active-section">
-        {/* Info banner */}
         <div className="d-none d-md-block text-muted mb-3">
           <span className="fw-bold highlight-blink">
             <span className="blink-arrow">➤</span>
@@ -158,34 +174,52 @@ export default function Dashboard() {
                     </thead>
 
                     <tbody>
-                      <tr>
-                        <td>1</td>
-                        <td>Rohit Sharma</td>
-                        <td>9876543210</td>
-                        <td>Noida</td>
-                        <td>
-                          <span className="badge bg-warning text-dark">
-                            Air Pollution
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-sm btn-info text-white"
-                            data-bs-toggle="modal"
-                            data-bs-target="#viewComplaintModal"
-                          >
-                            <i className="fas fa-eye" />
-                          </button>
-                        </td>
-                        <td>
-                          <button className="btn btn-sm btn-success me-1">
-                            <i className="fas fa-check" />
-                          </button>
-                          <button className="btn btn-sm btn-danger">
-                            <i className="fas fa-times" />
-                          </button>
-                        </td>
-                      </tr>
+                      {loading && (
+                        <tr>
+                          <td colSpan="7">Loading...</td>
+                        </tr>
+                      )}
+
+                      {error && (
+                        <tr>
+                          <td colSpan="7" style={{ color: "red" }}>
+                            {error}
+                          </td>
+                        </tr>
+                      )}
+
+                      {!loading && grievances.length === 0 && (
+                        <tr>
+                          <td colSpan="7">No data found</td>
+                        </tr>
+                      )}
+
+                      {grievances.map((item, index) => (
+                        <tr key={item.id}>
+                          <td>{index + 1}</td>
+                          <td>{item.complainant_name || "N/A"}</td>
+                          <td>-</td>
+                          <td>-</td>
+                          <td>
+                            <span className="badge bg-warning text-dark">
+                              {item.complaint_subject}
+                            </span>
+                          </td>
+                          <td>
+                            <button className="btn btn-sm btn-info text-white">
+                              <i className="fas fa-eye" />
+                            </button>
+                          </td>
+                          <td>
+                            <button className="btn btn-sm btn-success me-1">
+                              <i className="fas fa-check" />
+                            </button>
+                            <button className="btn btn-sm btn-danger">
+                              <i className="fas fa-times" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
