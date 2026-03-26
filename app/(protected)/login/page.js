@@ -1,73 +1,75 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
-import { login } from '@/features/auth';
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
+import { login } from "@/features/auth";
 import Image from "next/image";
 import Link from "next/link";
-
-const [selectedRole, setSelectedRole] = useState("GRM Cell Admin");
-const [showPassword, setShowPassword] = useState(false);
-const [rememberMe, setRememberMe] = useState(true);
-const [showForgotModal, setShowForgotModal] = useState(false);
-const [formData, setFormData] = useState({
+export default function LoginPage() {
+  const [selectedRole, setSelectedRole] = useState("GRM Cell Admin");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [formData, setFormData] = useState({
     empId: "",
     password: "",
-});
-const [forgotData, setForgotData] = useState({
+  });
+  const [forgotData, setForgotData] = useState({
     fpField: "",
-});
+  });
 
-const dispatch = useDispatch();
-const router = useRouter();
-const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { loading, error, isAuthenticated } = useSelector(
+    (state) => state.auth,
+  );
 
-const roleDescriptions = {
+  const roleDescriptions = {
     "GRM Cell Admin":
-        "Full access to register offline complaints, assign to Ex-EN, and manage workflow.",
+      "Full access to register offline complaints, assign to Ex-EN, and manage workflow.",
     "Regional Officer":
-        "Assign complaints to SDOs, monitor field inspections, review ATRs.",
-};
+      "Assign complaints to SDOs, monitor field inspections, review ATRs.",
+  };
 
-const handleRoleClick = (role) => {
+  const handleRoleClick = (role) => {
     setSelectedRole(role);
-};
+  };
 
-const handleInputChange = (e) => {
+  const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
-};
+  };
 
-const handleForgotInputChange = (e) => {
+  const handleForgotInputChange = (e) => {
     const { id, value } = e.target;
     setForgotData((prev) => ({ ...prev, [id]: value }));
-};
+  };
 
-const handleLoginSubmit = async (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     const username = formData.empId.trim();
     const password = formData.password.trim();
     if (!username || !password) return;
     dispatch(login({ username, password }));
-};
+  };
 
-useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
-        router.replace('/dashboard');
+      router.replace("/dashboard");
     }
-}, [isAuthenticated, router]);
+  }, [isAuthenticated, router]);
 
-const handleForgotPassword = (e) => {
+  const handleForgotPassword = (e) => {
     e.preventDefault();
     // Handle forgot password logic
     setShowForgotModal(false);
     setForgotData({ fpField: "" });
-};
+  };
 
-return (
+  return (
     <>
-        <style>{`
+      <style>{`
         .login-page {
           min-height: 100vh;
           background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, #1a5ba0 100%);
@@ -423,296 +425,300 @@ return (
         }
       `}</style>
 
-        <div className="login-page">
-            <div
-                style={{
-                    width: "100%",
-                    position: "relative",
-                    zIndex: 1,
-                }}
-            >
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: "32px",
-                        padding: "32px",
-                        alignItems: "stretch",
-                    }}
-                >
-                    {/* LEFT PANEL */}
-                    <div className="login-deco">
-                        <div className="login-deco__icon">
-                            <Image
-                                src="/images/logo.svg"
-                                alt="PPCB Logo"
-                                width={60}
-                                height={60}
-                            />
-                        </div>
-                        <h1 className="login-deco__title">
-                            PPCB Grievance
-                            <br />
-                            Redressal Portal
-                        </h1>
-                        <p className="login-deco__desc">
-                            Secure access for PPCB officers, GRM Cell, and management to
-                            process and resolve environmental grievances.
-                        </p>
-
-                        <div className="login-deco__cards">
-                            <section className="kpi-card">
-                                <div className="kpi-card__label">Today&apos;s Pending</div>
-                                <div
-                                    className="kpi-card__value"
-                                    style={{ color: "var(--danger)" }}
-                                >
-                                    915
-                                </div>
-                                <div className="kpi-card__hint">
-                                    Active grievances requiring action
-                                </div>
-                            </section>
-
-                            <section className="kpi-card">
-                                <div className="kpi-card__label">Resolved Today</div>
-                                <div
-                                    className="kpi-card__value"
-                                    style={{ color: "var(--success)" }}
-                                >
-                                    210
-                                </div>
-                                <div className="kpi-card__hint">
-                                    Successfully closed cases
-                                </div>
-                            </section>
-
-                            <section className="kpi-card">
-                                <div className="kpi-card__label">Overdue Escalations</div>
-                                <div
-                                    className="kpi-card__value"
-                                    style={{ color: "var(--warning)" }}
-                                >
-                                    142
-                                </div>
-                                <div className="kpi-card__hint">
-                                    Require immediate attention
-                                </div>
-                            </section>
-                        </div>
-                    </div>
-
-                    {/* RIGHT PANEL */}
-                    <div className="login-card">
-                        <div className="login-emblem">🔒</div>
-                        <h2 className="login-title">Officer Login</h2>
-                        <p className="login-sub">
-                            PPCB GRM Portal · Government of Punjab
-                        </p>
-
-                        <div
-                            style={{
-                                marginBottom: "12px",
-                                fontSize: "0.75rem",
-                                fontWeight: "700",
-                                textTransform: "uppercase",
-                                letterSpacing: ".06em",
-                                color: "var(--text-muted)",
-                            }}
-                        >
-                            Login As
-                        </div>
-
-                        <div className="role-grid">
-                            <button
-                                type="button"
-                                className={`role-btn ${selectedRole === "GRM Cell Admin" ? "active" : ""}`}
-                                onClick={() => handleRoleClick("GRM Cell Admin")}
-                            >
-                                <i
-                                    className="bi bi-person-badge-fill"
-                                    style={{
-                                        display: "block",
-                                        marginBottom: "4px",
-                                        fontSize: "1rem",
-                                    }}
-                                ></i>
-                                PPCB GRM Cell Login
-                            </button>
-                            <button
-                                type="button"
-                                className={`role-btn ${selectedRole === "Regional Officer" ? "active" : ""}`}
-                                onClick={() => handleRoleClick("Regional Officer")}
-                            >
-                                <i
-                                    className="bi bi-shield-check"
-                                    style={{
-                                        display: "block",
-                                        marginBottom: "4px",
-                                        fontSize: "1rem",
-                                    }}
-                                ></i>
-                                Central/Regional Officer Login
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleLoginSubmit}>
-                            <div style={{ marginBottom: "16px" }}>
-                                <label htmlFor="empId" className="f-label">
-                                    Employee ID / Username <span className="req">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    id="empId"
-                                    className="f-control"
-                                    placeholder="e.g. PPCB0001"
-                                    value={formData.empId}
-                                    onChange={handleInputChange}
-                                    autoComplete="username"
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: "16px" }}>
-                                <label htmlFor="pwField" className="f-label">
-                                    Password <span className="req">*</span>
-                                </label>
-                                <div className="pw-wrap">
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        id="pwField"
-                                        className="f-control"
-                                        placeholder="Enter password"
-                                        value={formData.password}
-                                        onChange={handleInputChange}
-                                        style={{ paddingRight: "40px" }}
-                                        autoComplete="current-password"
-                                    />
-                                    <button
-                                        className="pw-toggle"
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        aria-label={
-                                            showPassword ? "Hide password" : "Show password"
-                                        }
-                                    >
-                                        <i
-                                            className={`bi bi-eye${showPassword ? "-slash" : ""}`}
-                                        ></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    marginBottom: "24px",
-                                    fontSize: "0.85rem",
-                                }}
-                            >
-                                <label className="remember-check">
-                                    <input
-                                        type="checkbox"
-                                        id="rememberMe"
-                                        checked={rememberMe}
-                                        onChange={(e) => setRememberMe(e.target.checked)}
-                                    />
-                                    <span>Remember me</span>
-                                </label>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setShowForgotModal(true)}
-                                    style={{
-                                        background: "none",
-                                        border: "none",
-                                        color: "var(--primary)",
-                                        fontWeight: "600",
-                                        cursor: "pointer",
-                                        textDecoration: "none",
-                                        fontSize: "0.85rem",
-                                    }}
-                                >
-                                    Forgot Password?
-                                </button>
-                            </div>
-
-                            <button type="submit" className="login-btn">
-                                <i className="bi bi-box-arrow-in-right"></i>
-                                <span>Login to Dashboard</span>
-                            </button>
-
-                            {error && (
-                                <div className="alert-inline error">
-                                    <i className="bi bi-exclamation-circle-fill me-1"></i>
-                                    {error}
-                                </div>
-                            )}
-                            {loading && (
-                                <div style={{ textAlign: 'center', marginTop: 12 }}>
-                                    <span className="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
-                                    <span style={{ marginLeft: 8 }}>Logging in...</span>
-                                </div>
-                            )}
-
-                            <div className="back-link">
-                                <Link href="/">
-                                    <i className="bi bi-arrow-left me-1"></i>
-                                    Back to Public Portal
-                                </Link>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {/* FORGOT PASSWORD MODAL */}
+      <div className="login-page">
         <div
-            className={`fp-modal ${showForgotModal ? "open" : ""}`}
-            onClick={() => showForgotModal && setShowForgotModal(false)}
+          style={{
+            width: "100%",
+            position: "relative",
+            zIndex: 1,
+          }}
         >
-            <div className="fp-box" onClick={(e) => e.stopPropagation()}>
-                <div className="fp-icon">🔑</div>
-                <h6 className="fp-title">Reset Password</h6>
-                <p className="fp-desc">
-                    Enter your registered Employee ID or Email to receive reset
-                    instructions.
-                </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "32px",
+              padding: "32px",
+              alignItems: "stretch",
+            }}
+          >
+            {/* LEFT PANEL */}
+            <div className="login-deco">
+              <div className="login-deco__icon">
+                <Image
+                  src="/images/logo.svg"
+                  alt="PPCB Logo"
+                  width={60}
+                  height={60}
+                />
+              </div>
+              <h1 className="login-deco__title">
+                PPCB Grievance
+                <br />
+                Redressal Portal
+              </h1>
+              <p className="login-deco__desc">
+                Secure access for PPCB officers, GRM Cell, and management to
+                process and resolve environmental grievances.
+              </p>
+
+              <div className="login-deco__cards">
+                <section className="kpi-card">
+                  <div className="kpi-card__label">Today&apos;s Pending</div>
+                  <div
+                    className="kpi-card__value"
+                    style={{ color: "var(--danger)" }}
+                  >
+                    915
+                  </div>
+                  <div className="kpi-card__hint">
+                    Active grievances requiring action
+                  </div>
+                </section>
+
+                <section className="kpi-card">
+                  <div className="kpi-card__label">Resolved Today</div>
+                  <div
+                    className="kpi-card__value"
+                    style={{ color: "var(--success)" }}
+                  >
+                    210
+                  </div>
+                  <div className="kpi-card__hint">
+                    Successfully closed cases
+                  </div>
+                </section>
+
+                <section className="kpi-card">
+                  <div className="kpi-card__label">Overdue Escalations</div>
+                  <div
+                    className="kpi-card__value"
+                    style={{ color: "var(--warning)" }}
+                  >
+                    142
+                  </div>
+                  <div className="kpi-card__hint">
+                    Require immediate attention
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            {/* RIGHT PANEL */}
+            <div className="login-card">
+              <div className="login-emblem">🔒</div>
+              <h2 className="login-title">Officer Login</h2>
+              <p className="login-sub">
+                PPCB GRM Portal · Government of Punjab
+              </p>
+
+              <div
+                style={{
+                  marginBottom: "12px",
+                  fontSize: "0.75rem",
+                  fontWeight: "700",
+                  textTransform: "uppercase",
+                  letterSpacing: ".06em",
+                  color: "var(--text-muted)",
+                }}
+              >
+                Login As
+              </div>
+
+              <div className="role-grid">
+                <button
+                  type="button"
+                  className={`role-btn ${selectedRole === "GRM Cell Admin" ? "active" : ""}`}
+                  onClick={() => handleRoleClick("GRM Cell Admin")}
+                >
+                  <i
+                    className="bi bi-person-badge-fill"
+                    style={{
+                      display: "block",
+                      marginBottom: "4px",
+                      fontSize: "1rem",
+                    }}
+                  ></i>
+                  PPCB GRM Cell Login
+                </button>
+                <button
+                  type="button"
+                  className={`role-btn ${selectedRole === "Regional Officer" ? "active" : ""}`}
+                  onClick={() => handleRoleClick("Regional Officer")}
+                >
+                  <i
+                    className="bi bi-shield-check"
+                    style={{
+                      display: "block",
+                      marginBottom: "4px",
+                      fontSize: "1rem",
+                    }}
+                  ></i>
+                  Central/Regional Officer Login
+                </button>
+              </div>
+
+              <form onSubmit={handleLoginSubmit}>
+                <div style={{ marginBottom: "16px" }}>
+                  <label htmlFor="empId" className="f-label">
+                    Employee ID / Username <span className="req">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="empId"
+                    className="f-control"
+                    placeholder="e.g. PPCB0001"
+                    value={formData.empId}
+                    onChange={handleInputChange}
+                    autoComplete="username"
+                  />
+                </div>
 
                 <div style={{ marginBottom: "16px" }}>
-                    <label htmlFor="fpField" className="f-label">
-                        Employee ID / Email
-                    </label>
+                  <label htmlFor="pwField" className="f-label">
+                    Password <span className="req">*</span>
+                  </label>
+                  <div className="pw-wrap">
                     <input
-                        type="text"
-                        id="fpField"
-                        className="f-control"
-                        placeholder="PPCB0001 or email@ppcb.gov.in"
-                        value={forgotData.fpField}
-                        onChange={handleForgotInputChange}
+                      type={showPassword ? "text" : "password"}
+                      id="pwField"
+                      className="f-control"
+                      placeholder="Enter password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      style={{ paddingRight: "40px" }}
+                      autoComplete="current-password"
                     />
+                    <button
+                      className="pw-toggle"
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      <i
+                        className={`bi bi-eye${showPassword ? "-slash" : ""}`}
+                      ></i>
+                    </button>
+                  </div>
                 </div>
 
-                <button
-                    className="btn-full"
-                    style={{ marginBottom: "12px" }}
-                    onClick={handleForgotPassword}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "24px",
+                    fontSize: "0.85rem",
+                  }}
                 >
-                    <i className="bi bi-send-fill me-1"></i>
-                    Send Reset Link
-                </button>
+                  <label className="remember-check">
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                    />
+                    <span>Remember me</span>
+                  </label>
 
-                <button
-                    className="btn-as-link"
+                  <button
                     type="button"
-                    onClick={() => setShowForgotModal(false)}
-                >
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </>
-);
+                    onClick={() => setShowForgotModal(true)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--primary)",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      textDecoration: "none",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
 
+                <button type="submit" className="login-btn">
+                  <i className="bi bi-box-arrow-in-right"></i>
+                  <span>Login to Dashboard</span>
+                </button>
+
+                {error && (
+                  <div className="alert-inline error">
+                    <i className="bi bi-exclamation-circle-fill me-1"></i>
+                    {error}
+                  </div>
+                )}
+                {loading && (
+                  <div style={{ textAlign: "center", marginTop: 12 }}>
+                    <span
+                      className="spinner-border spinner-border-sm text-primary"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    <span style={{ marginLeft: 8 }}>Logging in...</span>
+                  </div>
+                )}
+
+                <div className="back-link">
+                  <Link href="/">
+                    <i className="bi bi-arrow-left me-1"></i>
+                    Back to Public Portal
+                  </Link>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FORGOT PASSWORD MODAL */}
+      <div
+        className={`fp-modal ${showForgotModal ? "open" : ""}`}
+        onClick={() => showForgotModal && setShowForgotModal(false)}
+      >
+        <div className="fp-box" onClick={(e) => e.stopPropagation()}>
+          <div className="fp-icon">🔑</div>
+          <h6 className="fp-title">Reset Password</h6>
+          <p className="fp-desc">
+            Enter your registered Employee ID or Email to receive reset
+            instructions.
+          </p>
+
+          <div style={{ marginBottom: "16px" }}>
+            <label htmlFor="fpField" className="f-label">
+              Employee ID / Email
+            </label>
+            <input
+              type="text"
+              id="fpField"
+              className="f-control"
+              placeholder="PPCB0001 or email@ppcb.gov.in"
+              value={forgotData.fpField}
+              onChange={handleForgotInputChange}
+            />
+          </div>
+
+          <button
+            className="btn-full"
+            style={{ marginBottom: "12px" }}
+            onClick={handleForgotPassword}
+          >
+            <i className="bi bi-send-fill me-1"></i>
+            Send Reset Link
+          </button>
+
+          <button
+            className="btn-as-link"
+            type="button"
+            onClick={() => setShowForgotModal(false)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
