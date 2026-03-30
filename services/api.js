@@ -17,8 +17,36 @@ class ApiError extends Error {
 /**
  * Base fetch wrapper with error handling
  */
+
+let sessionInitialized = false;
+
+async function ensureSession() {
+    if (sessionInitialized) return;
+
+    try {
+        await fetch(`${API_BASE_URL}/public/grievance-session`, {
+            method: 'GET',
+            credentials: 'include', 
+        });
+
+        sessionInitialized = true;
+
+        setTimeout(() => {
+            sessionInitialized = false;
+        }, 10 * 60 * 1000);
+
+    } catch (error) {
+        console.error('Session init failed:', error);
+    }
+}
+
 async function request(url, options = {}) {
     // Build headers and body with FormData support
+
+    if (url.includes('/grievances')) {
+        await ensureSession();
+    }
+
     const headers = { ...(options.headers || {}) };
     let body = options.body;
 
@@ -33,6 +61,7 @@ async function request(url, options = {}) {
         ...options,
         headers,
         body,
+        credentials: 'include'
     };
 
     try {

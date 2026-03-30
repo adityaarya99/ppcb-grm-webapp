@@ -6,9 +6,6 @@ import Image from "next/image";
 import { useDispatch, useSelector } from 'react-redux';
 import { submitGrievance, resetSubmissionState } from '@/features/grievances/slice';
 
-/**
- * Citizen Grievance Form Page - Multi-step form for submitting complaints
- */
 
 export default function CitizenGrievanceFormPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -16,13 +13,10 @@ export default function CitizenGrievanceFormPage() {
   const [files, setFiles] = useState([]);
   const fileInputRef = useRef(null);
 
-  // Redux
   const dispatch = useDispatch();
   const { loading, error, success, referenceNumber } = useSelector((state) => state.grievance);
 
-  // Form data state
   const [formData, setFormData] = useState({
-    // Individual complainant
     cpName: "",
     cpMobile: "",
     cpDistrict: "",
@@ -99,46 +93,58 @@ export default function CitizenGrievanceFormPage() {
   // Submit complaint (dispatches Redux thunk)
   const handleSubmitComplaint = async () => {
     if (!declarationChecked) {
-      alert("Please check the declaration checkbox to proceed.");
+      alert("Please check declaration");
       return;
     }
 
-    // Build FormData according to backend expectations (matches provided curl)
     const form = new FormData();
 
-    // Attach files (up to whatever user selected)
+    // ✅ FILES (Correct already)
     if (files && files.length > 0) {
       files.forEach((f) => form.append('file', f));
     }
 
-    // Basic mapping of frontend fields to backend form keys
-    // `form_type` - default to 'public'
-    form.append('form_type', 'public');
+    // ✅ REQUIRED FIELDS
+    form.append('form_type', 'Individual');
 
-    // pollution_types can be multiple; map category (e.g. 'Air Pollution' -> 'Air')
+    // ✅ pollution_types MUST BE ARRAY
     if (formData.cCategory) {
       const simple = String(formData.cCategory).split(' ')[0];
       form.append('pollution_types', simple);
+      // backend Transform will convert to array
     }
 
     form.append('complaint_subject', formData.cSubject || '');
-    form.append('site_address', formData.pollutionLocation || '');
+    form.append('complaint_details', formData.cDesc || ''); // ✅ FIXED
 
-    // site_district_id: backend may expect an id; fall back to district name if id not available
+    form.append('site_address', formData.pollutionLocation || '');
     form.append('site_district_id', formData.cpDistrict || '');
     form.append('site_pincode', formData.cpPinCode || '');
 
-    // filed_by_type: Individual or Group
-    form.append('filed_by_type', complaintType === 'individual' ? 'Individual' : 'Group');
+    form.append(
+      'filed_by_type',
+      complaintType === 'individual' ? 'Individual' : 'Group'
+    );
 
-    // Additional fields for context
-    form.append('description', formData.cDesc || '');
+    // ✅ FIX FIELD NAMES
+    form.append(
+      'complainant_name',
+      complaintType === 'individual'
+        ? formData.cpName
+        : formData.cpNodalName
+    );
+
+    form.append(
+      'complainant_contact_no', // ✅ FIXED NAME
+      complaintType === 'individual'
+        ? formData.cpMobile
+        : formData.cpNodalContact
+    );
+
+    // OPTIONAL
     form.append('industry_name', formData.industryName || '');
-    form.append('complainant_name', complaintType === 'individual' ? formData.cpName || '' : formData.cpNodalName || '');
-    form.append('complainant_contact', complaintType === 'individual' ? formData.cpMobile || '' : formData.cpNodalContact || '');
 
     dispatch(submitGrievance(form));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const progressPercentages = { 1: "33.33%", 2: "66.66%", 3: "100%" };
@@ -490,18 +496,18 @@ export default function CitizenGrievanceFormPage() {
                             onChange={handleInputChange}
                           >
                             <option value="">-- Select District --</option>
-                            <option>Amritsar</option>
-                            <option>Ludhiana</option>
-                            <option>Jalandhar</option>
-                            <option>Patiala</option>
-                            <option>Bathinda</option>
-                            <option>Mohali (SAS Nagar)</option>
-                            <option>Gurdaspur</option>
-                            <option>Hoshiarpur</option>
-                            <option>Moga</option>
-                            <option>Firozpur</option>
-                            <option>Faridkot</option>
-                            <option>Sangrur</option>
+<option value="1">Amritsar</option>
+<option value="2">Ludhiana</option>
+<option value="3">Jalandhar</option>
+<option value="4">Patiala</option>
+<option value="5">Bathinda</option>
+<option value="6">Mohali (SAS Nagar)</option>
+<option value="7">Gurdaspur</option>
+<option value="8">Hoshiarpur</option>
+<option value="9">Moga</option>
+<option value="10">Firozpur</option>
+<option value="11">Faridkot</option>
+<option value="12">Sangrur</option>
                           </select>
                         </div>
                         <div className="col-md-6">
