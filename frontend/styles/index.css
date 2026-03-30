@@ -1,0 +1,7 @@
+/**
+ * Main Styles Entry Point
+ * Import this file in app/globals.css or app/layout.js
+ */
+
+/* Tailwind base, components, utilities */
+@import './tailwind.css';
