@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useDispatch, useSelector } from 'react-redux';
+import { submitGrievance, resetSubmissionState } from '@/features/grievances/slice';
 
 /**
  * Citizen Grievance Form Page - Multi-step form for submitting complaints
@@ -11,10 +13,12 @@ import Image from "next/image";
 export default function CitizenGrievanceFormPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [complaintType, setComplaintType] = useState("individual");
-  const [successState, setSuccessState] = useState(false);
-  const [generatedNum, setGeneratedNum] = useState("");
   const [files, setFiles] = useState([]);
   const fileInputRef = useRef(null);
+
+  // Redux
+  const dispatch = useDispatch();
+  const { loading, error, success, referenceNumber } = useSelector((state) => state.grievance);
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -92,20 +96,56 @@ export default function CitizenGrievanceFormPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Submit complaint
-  const handleSubmitComplaint = () => {
+  // Submit complaint (dispatches Redux thunk)
+  const handleSubmitComplaint = async () => {
     if (!declarationChecked) {
       alert("Please check the declaration checkbox to proceed.");
       return;
     }
 
-    setSuccessState(true);
-    const num = `PPCB/GRM/2025/0${4828 + Math.floor(Math.random() * 10)}`;
-    setGeneratedNum(num);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Build FormData according to backend expectations (matches provided curl)
+    const form = new FormData();
+
+    // Attach files (up to whatever user selected)
+    if (files && files.length > 0) {
+      files.forEach((f) => form.append('file', f));
+    }
+
+    // Basic mapping of frontend fields to backend form keys
+    // `form_type` - default to 'public'
+    form.append('form_type', 'public');
+
+    // pollution_types can be multiple; map category (e.g. 'Air Pollution' -> 'Air')
+    if (formData.cCategory) {
+      const simple = String(formData.cCategory).split(' ')[0];
+      form.append('pollution_types', simple);
+    }
+
+    form.append('complaint_subject', formData.cSubject || '');
+    form.append('site_address', formData.pollutionLocation || '');
+
+    // site_district_id: backend may expect an id; fall back to district name if id not available
+    form.append('site_district_id', formData.cpDistrict || '');
+    form.append('site_pincode', formData.cpPinCode || '');
+
+    // filed_by_type: Individual or Group
+    form.append('filed_by_type', complaintType === 'individual' ? 'Individual' : 'Group');
+
+    // Additional fields for context
+    form.append('description', formData.cDesc || '');
+    form.append('industry_name', formData.industryName || '');
+    form.append('complainant_name', complaintType === 'individual' ? formData.cpName || '' : formData.cpNodalName || '');
+    form.append('complainant_contact', complaintType === 'individual' ? formData.cpMobile || '' : formData.cpNodalContact || '');
+
+    dispatch(submitGrievance(form));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const progressPercentages = { 1: "33.33%", 2: "66.66%", 3: "100%" };
+
+  // Show success state if Redux says so
+  const successState = success;
+  const generatedNum = referenceNumber || '';
 
   return (
     <>
@@ -152,6 +192,22 @@ export default function CitizenGrievanceFormPage() {
           flexDirection: "column",
         }}
       >
+        {/* Loading indicator */}
+        {loading && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(255,255,255,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="spinner-border text-primary" role="status" style={{ width: 60, height: 60 }}>
+              <span className="visually-hidden">Submitting...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Error message */}
+        {error && (
+          <div style={{ maxWidth: 600, margin: '24px auto 0', padding: '12px 20px', background: '#ffeaea', color: '#a94442', border: '1px solid #f5c6cb', borderRadius: 8, fontWeight: 600, fontSize: '1rem', textAlign: 'center' }}>
+            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+            {error}
+          </div>
+        )}
         {/* FORM HEADER */}
         <div
           style={{
