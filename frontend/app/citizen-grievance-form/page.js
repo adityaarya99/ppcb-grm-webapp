@@ -1,21 +1,48 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useDispatch, useSelector } from 'react-redux';
 import { submitGrievance, resetSubmissionState } from '@/features/grievances/slice';
+import Swal from 'sweetalert2';
+import { getDistricts, getGroupTypes } from '@/services/api';
 
 
 export default function CitizenGrievanceFormPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [complaintType, setComplaintType] = useState("individual");
   const [files, setFiles] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [groupTypes, setGroupTypes] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
   const fileInputRef = useRef(null);
 
   const dispatch = useDispatch();
   const { loading, error, success, referenceNumber } = useSelector((state) => state.grievance);
 
+<<<<<<< HEAD:frontend/app/citizen-grievance-form/page.js
+  // Fetch districts and group types on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [districtsData, groupTypesData] = await Promise.all([
+          getDistricts(),
+          getGroupTypes(),
+        ]);
+        setDistricts(districtsData || []);
+        setGroupTypes(groupTypesData || []);
+      } catch (err) {
+        console.error('Error fetching form data:', err);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+=======
+>>>>>>> origin/develop:app/citizen-grievance-form/page.js
   const [formData, setFormData] = useState({
     cpName: "",
     cpMobile: "",
@@ -105,7 +132,11 @@ export default function CitizenGrievanceFormPage() {
     }
 
     // ✅ REQUIRED FIELDS
+<<<<<<< HEAD:frontend/app/citizen-grievance-form/page.js
+    form.append('form_type', 'CITIZEN');
+=======
     form.append('form_type', 'Individual');
+>>>>>>> origin/develop:app/citizen-grievance-form/page.js
 
     // ✅ pollution_types MUST BE ARRAY
     if (formData.cCategory) {
@@ -146,9 +177,46 @@ export default function CitizenGrievanceFormPage() {
 
     dispatch(submitGrievance(form));
   };
-
+  const handleStep1Next = () => {
+    if (validateStep1()) {
+      goToStep(2);
+    }
+  };
   const progressPercentages = { 1: "33.33%", 2: "66.66%", 3: "100%" };
+  const validateStep1 = () => {
+    let errors = [];
 
+    if (complaintType === "individual") {
+      if (!formData.cpName) errors.push("Complainant Name is required");
+      if (!formData.cpMobile) errors.push("Mobile number is required");
+      if (!/^[0-9]{10}$/.test(formData.cpMobile)) errors.push("Invalid mobile number");
+      if (!formData.cpDistrict) errors.push("District is required");
+      if (!formData.cpAddress) errors.push("Address is required");
+    }
+
+    if (complaintType === "group") {
+      if (!formData.cpGroupType) errors.push("Group Type is required");
+      if (!formData.cpNodalName) errors.push("Nodal Officer Name is required");
+      if (!formData.cpNodalContact) errors.push("Nodal Contact is required");
+      if (!formData.cpGroupAddress) errors.push("Group Address is required");
+    }
+
+    if (!formData.cCategory) errors.push("Pollution Type is required");
+    if (!formData.pollutionLocation) errors.push("Pollution Location is required");
+    if (!formData.cSubject) errors.push("Complaint Subject is required");
+    if (!formData.cDesc) errors.push("Description is required");
+
+    if (errors.length > 0) {
+      Swal.fire({
+        title: 'Validation Errors',
+        html: errors.join('<br>'),
+        icon: 'error'
+      });
+      return false;
+    }
+
+    return true;
+  };
   // Show success state if Redux says so
   const successState = success;
   const generatedNum = referenceNumber || '';
@@ -494,8 +562,16 @@ export default function CitizenGrievanceFormPage() {
                             id="cpDistrict"
                             value={formData.cpDistrict}
                             onChange={handleInputChange}
+                            disabled={loadingData}
                           >
                             <option value="">-- Select District --</option>
+<<<<<<< HEAD:frontend/app/citizen-grievance-form/page.js
+                            {districts.map((district) => (
+                              <option key={district.id} value={district.id}>
+                                {district.name}
+                              </option>
+                            ))}
+=======
 <option value="1">Amritsar</option>
 <option value="2">Ludhiana</option>
 <option value="3">Jalandhar</option>
@@ -508,6 +584,7 @@ export default function CitizenGrievanceFormPage() {
 <option value="10">Firozpur</option>
 <option value="11">Faridkot</option>
 <option value="12">Sangrur</option>
+>>>>>>> origin/develop:app/citizen-grievance-form/page.js
                           </select>
                         </div>
                         <div className="col-md-6">
@@ -564,13 +641,14 @@ export default function CitizenGrievanceFormPage() {
                             id="cpGroupType"
                             value={formData.cpGroupType}
                             onChange={handleInputChange}
+                            disabled={loadingData}
                           >
                             <option value="">-- Select Group Type --</option>
-                            <option>Residents Welfare Association (RWA)</option>
-                            <option>Society</option>
-                            <option>Association</option>
-                            <option>Civil Society Organization (CSO)</option>
-                            <option>Other (Group of Individuals)</option>
+                            {groupTypes.map((groupType) => (
+                              <option key={groupType.id} value={groupType.name}>
+                                {groupType.name}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         <div className="col-md-6">
@@ -894,7 +972,7 @@ export default function CitizenGrievanceFormPage() {
                     }}
                   >
                     <button
-                      onClick={() => goToStep(2)}
+                      onClick={handleStep1Next}
                       className="btn-p"
                       style={{ padding: "10px 26px", fontSize: "0.85rem" }}
                     >
