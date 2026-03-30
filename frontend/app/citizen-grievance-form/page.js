@@ -21,6 +21,7 @@ export default function CitizenGrievanceFormPage() {
   const dispatch = useDispatch();
   const { loading, error, success, referenceNumber } = useSelector((state) => state.grievance);
 
+<<<<<<< HEAD:frontend/app/citizen-grievance-form/page.js
   // Fetch districts and group types on component mount
   useEffect(() => {
     const fetchData = async () => {
@@ -40,6 +41,8 @@ export default function CitizenGrievanceFormPage() {
     fetchData();
   }, []);
 
+=======
+>>>>>>> origin/develop:app/citizen-grievance-form/page.js
   const [formData, setFormData] = useState({
     cpName: "",
     cpMobile: "",
@@ -129,7 +132,11 @@ export default function CitizenGrievanceFormPage() {
     }
 
     // ✅ REQUIRED FIELDS
+<<<<<<< HEAD:frontend/app/citizen-grievance-form/page.js
     form.append('form_type', 'CITIZEN');
+=======
+    form.append('form_type', 'Individual');
+>>>>>>> origin/develop:app/citizen-grievance-form/page.js
 
     // ✅ pollution_types MUST BE ARRAY
     if (formData.cCategory) {
@@ -558,11 +565,26 @@ export default function CitizenGrievanceFormPage() {
                             disabled={loadingData}
                           >
                             <option value="">-- Select District --</option>
+<<<<<<< HEAD:frontend/app/citizen-grievance-form/page.js
                             {districts.map((district) => (
                               <option key={district.id} value={district.id}>
                                 {district.name}
                               </option>
                             ))}
+=======
+<option value="1">Amritsar</option>
+<option value="2">Ludhiana</option>
+<option value="3">Jalandhar</option>
+<option value="4">Patiala</option>
+<option value="5">Bathinda</option>
+<option value="6">Mohali (SAS Nagar)</option>
+<option value="7">Gurdaspur</option>
+<option value="8">Hoshiarpur</option>
+<option value="9">Moga</option>
+<option value="10">Firozpur</option>
+<option value="11">Faridkot</option>
+<option value="12">Sangrur</option>
+>>>>>>> origin/develop:app/citizen-grievance-form/page.js
                           </select>
                         </div>
                         <div className="col-md-6">
