@@ -17,13 +17,51 @@ class ApiError extends Error {
 /**
  * Base fetch wrapper with error handling
  */
+
+let sessionInitialized = false;
+
+async function ensureSession() {
+    if (sessionInitialized) return;
+
+    try {
+        await fetch(`${API_BASE_URL}/public/grievance-session`, {
+            method: 'GET',
+            credentials: 'include', 
+        });
+
+        sessionInitialized = true;
+
+        setTimeout(() => {
+            sessionInitialized = false;
+        }, 10 * 60 * 1000);
+
+    } catch (error) {
+        console.error('Session init failed:', error);
+    }
+}
+
 async function request(url, options = {}) {
+    // Build headers and body with FormData support
+
+    if (url.includes('/grievances')) {
+        await ensureSession();
+    }
+
+    const headers = { ...(options.headers || {}) };
+    let body = options.body;
+
+    // If body is a plain object (not FormData), stringify as JSON and set content-type
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    if (!isFormData && body && typeof body === 'object') {
+        body = JSON.stringify(body);
+        headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    }
+
     const config = {
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        },
         ...options,
+        headers,
+        body,
+        credentials: 'include'
     };
 
     try {
@@ -48,11 +86,7 @@ async function request(url, options = {}) {
             throw error;
         }
         // Network or other errors
-        throw new ApiError(
-            error.message || 'Network error',
-            0,
-            null
-        );
+        throw new ApiError(error.message || 'Network error', 0, null);
     }
 }
 
@@ -64,24 +98,25 @@ export const apiClient = {
         request(url, { ...options, method: 'GET' }),
 
     post: (url, data, options = {}) =>
+        // Pass data as `body` and let `request` handle JSON vs FormData
         request(url, {
             ...options,
             method: 'POST',
-            body: JSON.stringify(data),
+            body: data,
         }),
 
     put: (url, data, options = {}) =>
         request(url, {
             ...options,
             method: 'PUT',
-            body: JSON.stringify(data),
+            body: data,
         }),
 
     patch: (url, data, options = {}) =>
         request(url, {
             ...options,
             method: 'PATCH',
-            body: JSON.stringify(data),
+            body: data,
         }),
 
     delete: (url, options = {}) =>

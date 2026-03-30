@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from '@/services/api';
+import { API_ROUTES } from '@/lib/apiRoutes';
 
 export const grievanceService = {
     /**
@@ -27,6 +28,15 @@ export const grievanceService = {
      */
     async createGrievance(data) {
         return apiClient.post('/api/grievances', data);
+    },
+
+    /**
+     * Submit grievance with files (multipart/form-data)
+     * Accepts a FormData instance already populated with fields + files
+     */
+    async submitGrievanceWithFiles(formData) {
+        // Use central route for submit; apiClient handles FormData correctly
+        return apiClient.post(API_ROUTES.GRIEVANCES.SUBMIT, formData);
     },
 
     /**
